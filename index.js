@@ -121,6 +121,12 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/parts", verifyJWT, async (req, res) => {
+      const booking = req.body;
+      const result = await bikeCollection.insertOne(booking);
+      res.send(result);
+    });
+
     app.post("/purchase", verifyJWT, async (req, res) => {
       const booking = req.body;
       const result = await purchaseCollection.insertOne(booking);
