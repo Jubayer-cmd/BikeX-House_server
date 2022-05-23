@@ -56,6 +56,18 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
+
+    app.get("/purchase", async (req, res) => {
+      const users = await purchaseCollection.find().toArray();
+      res.send(users);
+    });
+
+    app.delete("/user/:email", verifyJWT, verifyAdmin, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await userCollection.deleteOne(filter);
+      res.send(result);
+    });
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
@@ -100,6 +112,13 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const buying = await bikeCollection.findOne(query);
       res.send(buying);
+    });
+
+    app.delete("/parts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await bikeCollection.deleteOne(query);
+      res.send(result);
     });
 
     app.post("/purchase", verifyJWT, async (req, res) => {
