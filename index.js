@@ -68,11 +68,6 @@ async function run() {
       res.send(users);
     });
 
-    app.get("/purchase", async (req, res) => {
-      const users = await purchaseCollection.find().toArray();
-      res.send(users);
-    });
-
     app.delete("/user/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
@@ -91,7 +86,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1d" }
       );
       res.send({ result, token });
     });
@@ -106,6 +101,23 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/profile/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
+    app.get("/profile/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      res.send(user);
+    });
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
@@ -138,17 +150,22 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/purchase", async (req, res) => {
+      const users = await purchaseCollection.find().toArray();
+      res.send(users);
+    });
+
     app.post("/purchase", verifyJWT, async (req, res) => {
       const booking = req.body;
       const result = await purchaseCollection.insertOne(booking);
       res.send(result);
     });
 
-    app.get("/purchase", verifyJWT, async (req, res) => {
-      const email = req.query.email;
+    app.get("/purchase/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
       const query = { email: email };
-      const result = await purchaseCollection.find(query).toArray();
-      res.send(result);
+      const user = await purchaseCollection.find(query).toArray();
+      res.send(user);
     });
 
     // DELETE
