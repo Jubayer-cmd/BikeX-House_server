@@ -70,8 +70,8 @@ async function run() {
 
     app.post("/review", async (req, res) => {
       const booking = req.body;
-      const result = await reviewCollection.insertOne(booking);
-      res.send(result);
+      const review = await reviewCollection.insertOne(booking);
+      res.send(review);
     });
     app.get("/review", async (req, res) => {
       const users = await reviewCollection.find().toArray();
