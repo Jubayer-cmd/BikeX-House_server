@@ -155,6 +155,13 @@ async function run() {
       res.send(users);
     });
 
+    app.get("/purchase/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const buying = await purchaseCollection.findOne(query);
+      res.send(buying);
+    });
+
     app.post("/purchase", verifyJWT, async (req, res) => {
       const booking = req.body;
       const result = await purchaseCollection.insertOne(booking);
