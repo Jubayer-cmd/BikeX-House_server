@@ -39,6 +39,7 @@ async function run() {
     const bikeCollection = client.db("bike").collection("parts");
     const purchaseCollection = client.db("bike").collection("purchase");
     const userCollection = client.db("bike").collection("user");
+    const reviewCollection = client.db("bike").collection("review");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -51,6 +52,16 @@ async function run() {
         res.status(403).send({ message: "forbidden" });
       }
     };
+
+    app.post("/review", async (req, res) => {
+      const booking = req.body;
+      const result = await reviewCollection.insertOne(booking);
+      res.send(result);
+    });
+    app.get("/review", async (req, res) => {
+      const users = await reviewCollection.find().toArray();
+      res.send(users);
+    });
 
     app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
