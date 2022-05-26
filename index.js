@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -40,6 +42,7 @@ async function run() {
     const purchaseCollection = client.db("bike").collection("purchase");
     const userCollection = client.db("bike").collection("user");
     const reviewCollection = client.db("bike").collection("review");
+    const paymentCollection = client.db("bike").collection("payments");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -52,6 +55,18 @@ async function run() {
         res.status(403).send({ message: "forbidden" });
       }
     };
+
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const service = req.body;
+      const price = service.price;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
 
     app.post("/review", async (req, res) => {
       const booking = req.body;
@@ -168,11 +183,29 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/purchase/:email", verifyJWT, async (req, res) => {
+    app.get("/order/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { email: email };
-      const user = await purchaseCollection.find(query).toArray();
+      const user = await purchaseCollection.find({ email: email }).toArray();
       res.send(user);
+    });
+
+    app.patch("/purchase/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+
+      const result = await paymentCollection.insertOne(payment);
+      const updatedBooking = await purchaseCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(updatedBooking);
     });
 
     // DELETE
