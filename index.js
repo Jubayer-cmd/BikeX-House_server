@@ -185,8 +185,8 @@ async function run() {
 
     app.get("/order/:email", async (req, res) => {
       const email = req.params.email;
-      const user = await purchaseCollection.find({ email: email }).toArray();
-      res.send(user);
+      const result = await purchaseCollection.find({ email: email }).toArray();
+      res.send(result);
     });
 
     app.patch("/purchase/:id", verifyJWT, async (req, res) => {
